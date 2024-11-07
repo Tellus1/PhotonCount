@@ -68,6 +68,8 @@ if __name__ == '__main__':
         frame_e_list.append(frame_e)
         frame_e_dark_list.append(frame_e_dark)
 
+    niter = 10
+    
     frame_e_cube = np.stack(frame_e_list)
 
     # Photon count, co-add, and correct for photometric error
@@ -88,7 +90,6 @@ if __name__ == '__main__':
     # plt.xlim(None,xmax)
     # plt.ylim(None,ymax)
     # plt.show()
-    niter = 5
     mean_rate = get_count_rate(frame_e_cube, thresh, emccd.em_gain, niter)
 
     # Plot images

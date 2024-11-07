@@ -177,7 +177,7 @@ def corr_photon_count(nobs, nfr, t, g, niter=2):
     
     # Troubleshoot: find lam0 values that produce negative lam
     naughty = lam0[lam < 0]
-    if naughty:
+    if any(naughty):
         print("Things screw up at Nbr = "+str(naughty))
 
     return lam
