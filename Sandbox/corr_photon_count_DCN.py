@@ -3,7 +3,7 @@ with photometric corrections.
 
 """
 import warnings
-
+import ipdb
 import numpy as np
 
 from PhotonCount.photon_count import photon_count
@@ -315,6 +315,14 @@ def _calc_func(nobs, nfr, t, g, lam):
 
 def _calc_dfunc(nfr, t, g, lam):
     """Derivative wrt lambda of objective function."""
+    overflow_indices = []
+
+    for index in np.ndindex(lam.shape):
+        try:
+            _ = np.exp(lam[index])
+        except OverflowError:
+            overflow_indices.append(index)
+            ipdb.set_trace() 
     dfunc = (
         (np.exp(-t/g - lam) * nfr)
         / (2 * g**2 * (6 + 3*lam + lam**2)**2)
