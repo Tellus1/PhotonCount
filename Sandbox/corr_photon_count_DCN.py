@@ -13,7 +13,7 @@ class CorrPhotonCountException(Exception):
     """Exception class for corr_photon_count module."""
 
 
-def get_count_rate(frames, thresh, em_gain, niter=2):
+def get_count_rate(frames, thresh, em_gain, niter=2, SNR=1000):
     """Take a stack of analog images and return the mean expected rate.
 
     This algorithm will photon count each frame in the stack individually,
@@ -32,6 +32,8 @@ def get_count_rate(frames, thresh, em_gain, niter=2):
         EM gain used when taking images.
     niter : int, optional
         Number of Newton's method iterations. Defaults to 2.
+    SNR  : float, optional
+        Desired level of precision.
 
     Returns
     -------
@@ -85,7 +87,7 @@ def get_count_rate(frames, thresh, em_gain, niter=2):
 
     # Correct for thresholding and coincidence loss
     mean_expected_rate = corr_photon_count(frame_pc_coadded, nframes, thresh,
-                                           em_gain, niter)
+                                           em_gain, niter, SNR)
 
     return mean_expected_rate
 
@@ -147,7 +149,7 @@ def get_counts_uncorrected(frames, thresh, em_gain):
 
     return frames_pc
 
-def corr_photon_count(nobs, nfr, t, g, niter=2):
+def corr_photon_count(nobs, nfr, t, g, niter=2, SNR=1000):
     """Correct photon counted images.
 
     Parameters
@@ -162,6 +164,8 @@ def corr_photon_count(nobs, nfr, t, g, niter=2):
         EM gain used when taking images.
     niter : int, optional
         Number of Newton's method iterations. Defaults to 2.
+    SNR : float, optional
+        Desired level of precision.
 
     Returns
     -------
@@ -173,7 +177,7 @@ def corr_photon_count(nobs, nfr, t, g, niter=2):
     lam0 = calc_lam_approx(nobs, nfr, t, g)
 
     # Use Newton's method to converge at a value for lambda
-    lam = lam_newton_fit(nobs, nfr, t, g, lam0, niter)
+    lam = lam_newton_fit(nobs, nfr, t, g, lam0, niter, SNR)
     
     # Troubleshoot: find lam0 values that produce negative lam
     naughty = lam0[lam < 0]
@@ -224,7 +228,7 @@ def calc_lam_approx(nobs, nfr, t, g):
     return lam1
 
 
-def lam_newton_fit(nobs, nfr, t, g, lam0, niter):
+def lam_newton_fit(nobs, nfr, t, g, lam0, niter, SNR):
     """Newton fit for finding lambda.
 
     Parameters
@@ -241,6 +245,8 @@ def lam_newton_fit(nobs, nfr, t, g, lam0, niter):
         Initial guess for lambda.
     niter : int
         Number of Newton's fit iterations to take.
+    SNR : float, optional
+        Desired level of precision.
 
     Returns
     -------
@@ -256,8 +262,24 @@ def lam_newton_fit(nobs, nfr, t, g, lam0, niter):
     for i in range(niter):
         func = _calc_func(nobs_m, nfr, t, g, lam_est_m)
         dfunc = _calc_dfunc(nfr, t, g, lam_est_m)
-        lam_est_m -= func / dfunc
-
+        delta_lam = func / dfunc
+        lam_est_m -= delta_lam
+    
+    tally = 0
+    cutoff = 1000
+    # Iterate Newton's method more, if need be, until desired precision is reached
+    while np.any(np.abs(delta_lam/lam_est_m) > 1/SNR):
+        func = _calc_func(nobs_m, nfr, t, g, lam_est_m)
+        dfunc = _calc_dfunc(nfr, t, g, lam_est_m)
+        delta_lam = func / dfunc
+        lam_est_m -= delta_lam
+        tally += 1
+        if tally > cutoff:
+            print('Cutting off at '+str(cutoff)+' iterations')
+            break
+    
+    if tally <= cutoff:
+        print('Reached desired SNR in '+str(tally)+' iterations')
     # if lam_est_m.min() < 0:
     #     raise CorrPhotonCountException('negative number of photon counts; '
     #     'try decreasing the frametime')
