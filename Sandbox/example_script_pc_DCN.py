@@ -8,8 +8,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from emccd_detect.emccd_detect import EMCCDDetect
-from PhotonCount.corr_photon_count import get_count_rate
-
+# from PhotonCount.corr_photon_count import get_count_rate
+from corr_photon_count_DCN import get_count_rate
 
 here = Path(os.path.abspath(os.path.dirname(__file__)))
 
@@ -46,7 +46,8 @@ if __name__ == '__main__':
         numel_gain_register=604
     )
 
-    fluxmap = np.load(Path(here, 'fluxmap.npy'))
+    fluxmap = np.load(Path(here, '..', 'fluxmap.npy'))
+    # fluxmap = 0.01*np.ones(100)
 
     # Simulate frames
     # Set frametime to get a good output, like 0.1 phot/pix or less
@@ -70,19 +71,30 @@ if __name__ == '__main__':
     frame_e_cube = np.stack(frame_e_list)
 
     # Photon count, co-add, and correct for photometric error
-    thresh = 500.  # see warnings below
-    if emccd.read_noise <=0:
-       warnings.warn('read noise should be greater than 0 for effective '
-       'photon counting')
-    if thresh < 4*emccd.read_noise:
-       warnings.warn('thresh should be at least 4 or 5 times read_noise for '
-       'accurate photon counting')
-    mean_rate = get_count_rate(frame_e_cube, thresh, emccd.em_gain)
+    thresh = 300.  # see warnings below
+    # if emccd.read_noise <=0:
+    #    warnings.warn('read noise should be greater than 0 for effective '
+    #    'photon counting')
+    # if thresh < 4*emccd.read_noise:
+    #    warnings.warn('thresh should be at least 4 or 5 times read_noise for '
+    #    'accurate photon counting')
+    xmax = 20000
+    ymax = 1500
+    frame_e_flat = frame_e_cube.flatten()
+    
+    # plt.hist(frame_e_flat, bins=int(40/(xmax/frame_e_flat.max())), edgecolor='black')
+    # plt.xlabel('Electrons')
+    # plt.title('Electron Counts Histogram')
+    # plt.xlim(None,xmax)
+    # plt.ylim(None,ymax)
+    # plt.show()
+    niter = 5
+    mean_rate = get_count_rate(frame_e_cube, thresh, emccd.em_gain, niter)
 
     # Plot images
-    imagesc(fluxmap, 'input flux map')
-    imagesc(np.max(frame_e_cube, axis=0), 'max frame (pixel-by-pixel)')
-    imagesc(frame_e_cube[0], 'random frame')
+    # imagesc(fluxmap, 'input flux map')
+    # imagesc(np.max(frame_e_cube, axis=0), 'max frame (pixel-by-pixel)')
+    # imagesc(frame_e_cube[0], 'random frame')
     imagesc(mean_rate, 'get_count_rate')
     plt.show()
 

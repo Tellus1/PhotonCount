@@ -174,6 +174,11 @@ def corr_photon_count(nobs, nfr, t, g, niter=2):
 
     # Use Newton's method to converge at a value for lambda
     lam = lam_newton_fit(nobs, nfr, t, g, lam0, niter)
+    
+    # Troubleshoot: find lam0 values that produce negative lam
+    naughty = lam0[lam < 0]
+    if naughty:
+        print("Things screw up at Nbr = "+str(naughty))
 
     return lam
 
@@ -253,9 +258,9 @@ def lam_newton_fit(nobs, nfr, t, g, lam0, niter):
         dfunc = _calc_dfunc(nfr, t, g, lam_est_m)
         lam_est_m -= func / dfunc
 
-    if lam_est_m.min() < 0:
-        raise CorrPhotonCountException('negative number of photon counts; '
-        'try decreasing the frametime')
+    # if lam_est_m.min() < 0:
+    #     raise CorrPhotonCountException('negative number of photon counts; '
+    #     'try decreasing the frametime')
 
     # Fill zero values back in
     lam = lam_est_m.filled(0)
