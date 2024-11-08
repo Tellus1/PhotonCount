@@ -50,7 +50,7 @@ if __name__ == '__main__':
 
     # Simulate frames
     # Set frametime to get a good output, like 0.1 phot/pix or less
-    frametime = 10 # s
+    frametime = 0.3 # s
     frame_e_list = []
     frame_e_dark_list = []
     nframes = 100
