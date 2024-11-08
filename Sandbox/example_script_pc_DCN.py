@@ -51,7 +51,7 @@ if __name__ == '__main__':
 
     # Simulate frames
     # Set frametime to get a good output, like 0.1 phot/pix or less
-    frametime = 10 # s
+    frametime = 5 # s
     frame_e_list = []
     frame_e_dark_list = []
     nframes = 100
@@ -68,7 +68,7 @@ if __name__ == '__main__':
         frame_e_list.append(frame_e)
         frame_e_dark_list.append(frame_e_dark)
 
-    niter = 2
+    niter = 1
     
     frame_e_cube = np.stack(frame_e_list)
 

@@ -13,7 +13,7 @@ class CorrPhotonCountException(Exception):
     """Exception class for corr_photon_count module."""
 
 
-def get_count_rate(frames, thresh, em_gain, niter=2, SNR=1000):
+def get_count_rate(frames, thresh, em_gain, niter=1, SNR=1000):
     """Take a stack of analog images and return the mean expected rate.
 
     This algorithm will photon count each frame in the stack individually,
@@ -149,7 +149,7 @@ def get_counts_uncorrected(frames, thresh, em_gain):
 
     return frames_pc
 
-def corr_photon_count(nobs, nfr, t, g, niter=2, SNR=1000):
+def corr_photon_count(nobs, nfr, t, g, niter=1, SNR=1000):
     """Correct photon counted images.
 
     Parameters
@@ -315,17 +315,17 @@ def _calc_func(nobs, nfr, t, g, lam):
 
 def _calc_dfunc(nfr, t, g, lam):
     """Derivative wrt lambda of objective function."""
-    overflow_indices = []
-    with warnings.catch_warnings():
-        warnings.simplefilter("error", RuntimeWarning)
+    # overflow_indices = []
+    # with warnings.catch_warnings():
+    #     warnings.simplefilter("error", RuntimeWarning)
             
-        for index in np.ndindex(lam.shape):
-            try:
-                _ = np.exp(lam[index])
-            except RuntimeWarning:
-                overflow_indices.append(index)
-                print(overflow_indices)
-                ipdb.set_trace() 
+    #     for index in np.ndindex(lam.shape):
+    #         try:
+    #             _ = np.exp(lam[index])
+    #         except RuntimeWarning:
+    #             overflow_indices.append(index)
+    #             print(overflow_indices)
+    #             ipdb.set_trace() 
     dfunc = (
         (np.exp(-t/g - lam) * nfr)
         / (2 * g**2 * (6 + 3*lam + lam**2)**2)
