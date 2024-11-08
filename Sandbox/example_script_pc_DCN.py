@@ -99,5 +99,3 @@ if __name__ == '__main__':
     imagesc(mean_rate, 'get_count_rate')
     plt.show()
 
-    if False:
-        1
